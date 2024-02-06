@@ -19,9 +19,10 @@ func main() {
 	fmt.Scanln(&Age)
 	years_to_Retirement := float64(65 - Age)
 	for {
-		fmt.Println("-------------------NEW SCENARIO--------------------")
+		fmt.Println("-------------------NEW SCENARIO---------PROTECTING STANDARD OF LIVING!-----------")
 		var Saving_perMonth float64
 		var interestRate float64
+		var Actual_Standard_Of_Living_net float64
 		cutoff := false
 		fmt.Print("Savings target per month: ")
 		fmt.Scanln(&Saving_perMonth)
@@ -31,11 +32,13 @@ func main() {
 		RDSP_rate := 3.5          //this varies according to situations.
 		Tax_Bracket := 1 - 0.1495 //0.0879 //0.1495 //14.95% SECOND BRACKET 2024
 		Years_To_Death := 81 - 65 //for a man in Canada
-		Standard_of_Living_at_Retirement := 30000.0
+		fmt.Print("Actual standard of Living (NET) :")
+		fmt.Scanln(&Actual_Standard_Of_Living_net)
+		Standard_of_Living_at_Retirement := Actual_Standard_Of_Living_net
 		RRQ_Disability_Max_Monthly := 1728.0 / 2               //50% the maximum
 		Canada_Pension_Plan_Disability_Max_2021 := 1046.66 / 2 //50% the maximum
 		Yearly_Inflation := 1.045                              // 5% in 2024 --> anticipated to return around 2%
-		Actual_Standard_Of_Living_net := 31000.0
+
 		Cost_Of_living := Actual_Standard_Of_Living_net * ((years_to_Retirement + float64(Years_To_Death)) / 24) * 2 // Cost of living index doubles every 24 years
 		Insurer_Inflation := 0.02                                                                                    //2%
 
