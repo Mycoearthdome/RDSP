@@ -108,18 +108,20 @@ func main() {
 		AdjustedRevenue := Actual_Standard_Of_Living_net
 		AdjustedCostOfLiving := Actual_Standard_Of_Living_net
 		RDSP_SPENT := 0.0
+		DictRetirement := make(map[int][]float64)
 
 		for i := 1; i <= (int(years_to_Retirement) + int(Years_To_Death)); i++ {
 			AdjustedRevenue = AdjustedRevenue + (Actual_Standard_Of_Living_net * Insurer_Inflation)
 			AdjustedCostOfLiving = AdjustedCostOfLiving + Actual_Standard_Of_Living_net/years_to_double_cost_of_Living
 			if (Saving_perMonth*12 < AdjustedCostOfLiving-AdjustedRevenue) && (cutoff == false) {
-				fmt.Printf("|Year %d [%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f$ SAVED MONTHLY  -->CUT-OFF<--\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
+				fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f$ SAVED MONTHLY  -->CUT-OFF<--\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
+				DictRetirement[2024+i] = append(DictRetirement[2024+i], AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, 0, 0)
 				cutoff = true
 			} else {
 				if cutoff {
 					if i >= int(years_to_Retirement-7) && RDSP_SPENT < 100000 && Age+i < 65 {
-						fmt.Printf("|Year %d [%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******INJECTING %.2f$ FROM RDSP RETIREMENT CAPITAL\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12))
-						//AdjustedRevenue += (AdjustedCostOfLiving - AdjustedRevenue)
+						fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**INJECTING %.2f$ FROM RDSP RETIREMENT CAPITAL\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12))
+						DictRetirement[2024+i] = append(DictRetirement[2024+i], AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12), 0)
 						RDSP_SPENT += (AdjustedCostOfLiving - AdjustedRevenue - (Saving_perMonth * 12))
 					} else {
 						if i >= int(years_to_Retirement) {
@@ -129,16 +131,26 @@ func main() {
 							if PreRetirement_Capital < 0 {
 								break
 							}
-							fmt.Printf("|Year %d [%d]<---Elderly Revenue ---> %.2f$<---Adjusted Cost of living--->%.2f$---|******INJECTING %.2f$ FROM RETIREMENT CAPITAL[%.2f left]\n", 2024+i, Age+i, ElderlyRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-ElderlyRevenue-(Saving_perMonth*12), PreRetirement_Capital)
-
+							fmt.Printf("|Year %d[%d]<---Elderly Revenue ---> %.2f$<---Adjusted Cost of living--->%.2f$---|**INJECTING %.2f$ FROM RETIREMENT CAPITAL[%.2f left]\n", 2024+i, Age+i, ElderlyRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-ElderlyRevenue-(Saving_perMonth*12), PreRetirement_Capital)
+							DictRetirement[2024+i] = append(DictRetirement[2024+i], ElderlyRevenue, AdjustedCostOfLiving, Saving_perMonth, 0, AdjustedCostOfLiving-ElderlyRevenue-(Saving_perMonth*12))
 						} else {
-							fmt.Printf("|Year %d [%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f percent PURCHASING POWER\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedRevenue/AdjustedCostOfLiving*100)
+							fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f percent PURCHASING POWER [insufficent funding]\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedRevenue/AdjustedCostOfLiving*100)
+							DictRetirement[2024+i] = append(DictRetirement[2024+i], AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, 0, 0)
 						}
 					}
 				} else {
-					fmt.Printf("|Year %d [%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f$ SAVED MONTHLY\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
+					fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f$ SAVED MONTHLY\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
+					DictRetirement[2024+i] = append(DictRetirement[2024+i], AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, 0, 0)
 				}
 			}
+		}
+		fmt.Println("------------------------------------------CLEARER-----------------------------------")
+		for i := 0; i < len(DictRetirement); i++ {
+			Year := 2025 + i
+			RetirementData := DictRetirement[Year]
+			AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, RDSP_Adjustment, Pension_Adjustments := RetirementData[0], RetirementData[1], RetirementData[2], RetirementData[3], RetirementData[4]
+			Cash := AdjustedRevenue - (Saving_perMonth * 12) + RDSP_Adjustment + Pension_Adjustments
+			fmt.Printf("|Year %d[%d]<---Cash---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f percent PURCHASING POWER\n", Year, Year-2024+Age, Cash, AdjustedCostOfLiving, Cash/AdjustedCostOfLiving*100)
 		}
 	}
 
