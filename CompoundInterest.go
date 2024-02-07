@@ -15,9 +15,12 @@ func compoundInterest(principal float64, interestRate float64, years float64) fl
 
 func main() {
 	var Age int
+	var Life_Expectancy int
 	fmt.Print("Age: ")
 	fmt.Scanln(&Age)
 	years_to_Retirement := float64(65 - Age)
+	fmt.Print("Life expectancy: ")
+	fmt.Scanln(&Life_Expectancy)
 	for {
 		fmt.Println("-------------------NEW SCENARIO---------PROTECTING STANDARD OF LIVING!-----------")
 		var Saving_perMonth float64
@@ -29,10 +32,10 @@ func main() {
 		principal := Saving_perMonth
 		fmt.Print("Observed interest rate: ")
 		fmt.Scanln(&interestRate)
-		RDSP_rate := 3.5          //this varies according to situations.
-		Tax_Bracket := 1 - 0.1495 //0.0879 //0.1495 //14.95% SECOND BRACKET 2024
-		Years_To_Death := 81 - 65 //for a man in Canada
-		fmt.Print("Actual standard of Living (NET) :")
+		RDSP_rate := 3.5                       //this varies according to situations.
+		Tax_Bracket := 1 - 0.1495              //0.0879 //0.1495 //14.95% SECOND BRACKET 2024
+		Years_To_Death := Life_Expectancy - 65 //for a man in Canada
+		fmt.Print("Actual standard of Living (NET): ")
 		fmt.Scanln(&Actual_Standard_Of_Living_net)
 		Standard_of_Living_at_Retirement := Actual_Standard_Of_Living_net
 		RRQ_Disability_Max_Monthly := 1728.0 / 2               //50% the maximum
@@ -77,21 +80,24 @@ func main() {
 			Retirement_Capital = Retirement_Capital - (Standard_of_Living_at_Retirement * Tax_Bracket)
 			LivingCapital = (Standard_of_Living_at_Retirement * Tax_Bracket) + ((RRQ_Disability_Max_Monthly * 12 * Yearly_Inflation) * Tax_Bracket) + ((Canada_Pension_Plan_Disability_Max_2021 * 12 * Yearly_Inflation) * Tax_Bracket)
 			if Retirement_Capital < 0 {
-				LivingCapital = Retirement_Capital
+				//LivingCapital = Retirement_Capital
+				fmt.Printf("Standard of life at %d: %.2f$\n", 65+i, LivingCapital)
+				Life_Expectancy = 65 + i
+				break
 			}
 			RRQ_Disability_Max_Monthly = RRQ_Disability_Max_Monthly * Yearly_Inflation
 			Canada_Pension_Plan_Disability_Max_2021 = Canada_Pension_Plan_Disability_Max_2021 * Yearly_Inflation
 		}
 
-		fmt.Printf("Savings by the age of 82: %.2f$\n", Retirement_Capital)
-		fmt.Printf("Standard of life at 81: %.2f$\n", LivingCapital)
-		fmt.Printf("Adjusted Cost of Living at 81: %.2f$\n", Cost_Of_living)
+		fmt.Printf("Savings by the age of %d: %.2f$\n", Life_Expectancy+1, Retirement_Capital)
 
-		fmt.Printf("Adjusted Reality at 81: %.2f percent actual standards of living\n", ((LivingCapital / Cost_Of_living) * 100))
+		fmt.Printf("Adjusted Cost of Living at %d: %.2f$\n", Life_Expectancy, Cost_Of_living)
+
+		fmt.Printf("Adjusted Reality at %d: %.2f percent actual standards of living\n", Life_Expectancy, ((LivingCapital / Cost_Of_living) * 100))
 
 		fmt.Println("Cost of living index doubles every 24 years average on 3% inflation historically.")
 
-		fmt.Printf("Projections using %.1f inflation leads to %.2f percent difference in standard of living at 81\n", (1-Yearly_Inflation)*-100, 100-((LivingCapital/Cost_Of_living)*100))
+		fmt.Printf("Projections using %.1f inflation leads to %.2f percent difference in standard of living at %d\n", (1-Yearly_Inflation)*-100, 100-((LivingCapital/Cost_Of_living)*100), Life_Expectancy)
 		fmt.Printf("This model suggest a saving of %.2f monthly\n", Saving_perMonth)
 
 		years_to_double_cost_of_Living := math.Log(2.0) / math.Log(1+(interestRate/100))
@@ -106,7 +112,7 @@ func main() {
 			AdjustedRevenue = AdjustedRevenue + (Actual_Standard_Of_Living_net * Insurer_Inflation)
 			AdjustedCostOfLiving = AdjustedCostOfLiving + Actual_Standard_Of_Living_net/years_to_double_cost_of_Living
 			if (Saving_perMonth*12 < AdjustedCostOfLiving-AdjustedRevenue) && (cutoff == false) {
-				fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******CUT-OFF\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving)
+				fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f$ SAVED MONTHLY  -->CUT-OFF<--\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
 				cutoff = true
 			} else {
 				if cutoff {
