@@ -40,7 +40,7 @@ func main() {
 		Standard_of_Living_at_Retirement := Actual_Standard_Of_Living_net
 		RRQ_Disability_Max_Monthly := 1728.0 / 2               //50% the maximum
 		Canada_Pension_Plan_Disability_Max_2021 := 1046.66 / 2 //50% the maximum
-		Yearly_Inflation := 1.045                              // 5% in 2024 --> anticipated to return around 2%
+		Yearly_Inflation := 1 + (interestRate / 100)           // 5% in 2024 --> anticipated to return around 2%
 
 		Cost_Of_living := Actual_Standard_Of_Living_net * ((years_to_Retirement + float64(Years_To_Death)) / 24) * 2 // Cost of living index doubles every 24 years
 		Insurer_Inflation := 0.02                                                                                    //2%
@@ -86,8 +86,8 @@ func main() {
 				Life_Expectancy = 65 + i
 				break
 			}
-			RRQ_Disability_Max_Monthly = RRQ_Disability_Max_Monthly * Yearly_Inflation
-			Canada_Pension_Plan_Disability_Max_2021 = Canada_Pension_Plan_Disability_Max_2021 * Yearly_Inflation
+			//RRQ_Disability_Max_Monthly = RRQ_Disability_Max_Monthly * Yearly_Inflation
+			//Canada_Pension_Plan_Disability_Max_2021 = Canada_Pension_Plan_Disability_Max_2021 * Yearly_Inflation
 		}
 
 		fmt.Printf("Savings by the age of %d: %.2f$\n", Life_Expectancy+1, Retirement_Capital)
@@ -123,11 +123,13 @@ func main() {
 						RDSP_SPENT += (AdjustedCostOfLiving - AdjustedRevenue - (Saving_perMonth * 12))
 					} else {
 						if i >= int(years_to_Retirement) {
-							PreRetirement_Capital -= (AdjustedCostOfLiving - AdjustedRevenue - (Saving_perMonth * 12))
+							Insurer_Inflation = 1.01 /// GOVT of Canada 1% inflation adjustment per year
+							ElderlyRevenue := ((RRQ_Disability_Max_Monthly * 12 * Tax_Bracket) * Insurer_Inflation) + ((Canada_Pension_Plan_Disability_Max_2021 * 12) * Insurer_Inflation)
+							PreRetirement_Capital -= (AdjustedCostOfLiving - ElderlyRevenue - (Saving_perMonth * 12))
 							if PreRetirement_Capital < 0 {
 								break
 							}
-							fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******INJECTING %.2f$ FROM RETIREMENT CAPITAL[%.2f left]\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12), PreRetirement_Capital)
+							fmt.Printf("|Year %d <---Elderly Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******INJECTING %.2f$ FROM RETIREMENT CAPITAL[%.2f left]\n", 2024+i, ElderlyRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-ElderlyRevenue-(Saving_perMonth*12), PreRetirement_Capital)
 
 						} else {
 							fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f percent PURCHASING POWER\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedRevenue/AdjustedCostOfLiving*100)
