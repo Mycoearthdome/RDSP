@@ -123,8 +123,8 @@ func main() {
 						RDSP_SPENT += (AdjustedCostOfLiving - AdjustedRevenue - (Saving_perMonth * 12))
 					} else {
 						if i >= int(years_to_Retirement) {
-							Insurer_Inflation = 1.01 /// GOVT of Canada 1% inflation adjustment per year
-							ElderlyRevenue := ((RRQ_Disability_Max_Monthly * 12 * Tax_Bracket) * Insurer_Inflation) + ((Canada_Pension_Plan_Disability_Max_2021 * 12) * Insurer_Inflation)
+							Insurer_Inflation = 1 + ((float64(i) - years_to_Retirement) * 0.01) /// GOVT of Canada 1% inflation adjustment per year
+							ElderlyRevenue := ((RRQ_Disability_Max_Monthly * 12 * Tax_Bracket) * Insurer_Inflation) + ((Canada_Pension_Plan_Disability_Max_2021 * 12 * Tax_Bracket) * Insurer_Inflation)
 							PreRetirement_Capital -= (AdjustedCostOfLiving - ElderlyRevenue - (Saving_perMonth * 12))
 							if PreRetirement_Capital < 0 {
 								break
