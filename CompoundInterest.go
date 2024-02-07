@@ -22,7 +22,7 @@ func main() {
 	fmt.Print("Life expectancy: ")
 	fmt.Scanln(&Life_Expectancy)
 	for {
-		fmt.Println("-------------------NEW SCENARIO---------PROTECTING STANDARD OF LIVING!-----------")
+		fmt.Println("-------------------NEW SCENARIO---------PROTECTING STANDARD OF LIVING!--------CTRL+C to exit---")
 		var Saving_perMonth float64
 		var interestRate float64
 		var Actual_Standard_Of_Living_net float64
@@ -72,6 +72,7 @@ func main() {
 		}
 
 		Retirement_Capital := Raw_Capital + principal
+		PreRetirement_Capital := Retirement_Capital
 
 		fmt.Printf("Savings by the age of 65: %.2f$\n", Retirement_Capital)
 
@@ -108,7 +109,7 @@ func main() {
 		AdjustedCostOfLiving := Actual_Standard_Of_Living_net
 		RDSP_SPENT := 0.0
 
-		for i := 1; i <= int(years_to_Retirement); i++ {
+		for i := 1; i <= (int(years_to_Retirement) + int(Years_To_Death)); i++ {
 			AdjustedRevenue = AdjustedRevenue + (Actual_Standard_Of_Living_net * Insurer_Inflation)
 			AdjustedCostOfLiving = AdjustedCostOfLiving + Actual_Standard_Of_Living_net/years_to_double_cost_of_Living
 			if (Saving_perMonth*12 < AdjustedCostOfLiving-AdjustedRevenue) && (cutoff == false) {
@@ -119,9 +120,18 @@ func main() {
 					if i >= int(years_to_Retirement-7) && RDSP_SPENT < 100000 {
 						fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******INJECTING %.2f$ FROM RDSP RETIREMENT CAPITAL\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12))
 						//AdjustedRevenue += (AdjustedCostOfLiving - AdjustedRevenue)
-						RDSP_SPENT += AdjustedCostOfLiving - AdjustedRevenue - (Saving_perMonth * 12)
+						RDSP_SPENT += (AdjustedCostOfLiving - AdjustedRevenue - (Saving_perMonth * 12))
 					} else {
-						fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f percent PURCHASING POWER\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedRevenue/AdjustedCostOfLiving*100)
+						if i >= int(years_to_Retirement) {
+							PreRetirement_Capital -= (AdjustedCostOfLiving - AdjustedRevenue - (Saving_perMonth * 12))
+							if PreRetirement_Capital < 0 {
+								break
+							}
+							fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******INJECTING %.2f$ FROM RETIREMENT CAPITAL[%.2f left]\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12), PreRetirement_Capital)
+
+						} else {
+							fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f percent PURCHASING POWER\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedRevenue/AdjustedCostOfLiving*100)
+						}
 					}
 				} else {
 					fmt.Printf("|Year %d <---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f$ SAVED MONTHLY\n", 2024+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
