@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"os"
 )
 
 func compoundInterest(principal float64, interestRate float64, years float64) float64 {
@@ -16,28 +17,43 @@ func compoundInterest(principal float64, interestRate float64, years float64) fl
 func main() {
 	var Age int
 	var Life_Expectancy int
+	var Saving_perMonth float64
+	var interestRate float64
+	var Actual_Standard_Of_Living_net float64
+	var Actual_Wealth float64
+	var ThresholdPurchasingPower float64
+	var principal float64
+	var previousSaving_perMonth float64
+	var previousReferenceAcceptable_Purchasing_Power float64
+	var Found bool = false
+	var Hunting bool = false
+	var Disabled bool = false
 	fmt.Print("Age: ")
 	fmt.Scanln(&Age)
-	years_to_Retirement := float64(65 - Age)
 	fmt.Print("Life expectancy: ")
 	fmt.Scanln(&Life_Expectancy)
+	fmt.Print("Savings target per month: ")
+	fmt.Scanln(&Saving_perMonth)
+	fmt.Print("Observed interest rate: ")
+	fmt.Scanln(&interestRate)
+	fmt.Print("Actual standard of Living (NET): ")
+	fmt.Scanln(&Actual_Standard_Of_Living_net)
+	fmt.Print("Acceptable Threshold in Purchasing Power (-percent): ")
+	fmt.Scanln(&ThresholdPurchasingPower)
+	fmt.Print("Existing Actual Wealth: ")
+	fmt.Scanln(&Actual_Wealth)
+	previousSaving_perMonth = Saving_perMonth
+	Reference_acceptable_Purchasing_Power := 75.0
+	previousReferenceAcceptable_Purchasing_Power = Reference_acceptable_Purchasing_Power
+	previousStandardofLiving := Actual_Standard_Of_Living_net
 	for {
-		fmt.Println("-------------------NEW SCENARIO---------PROTECTING STANDARD OF LIVING!--------CTRL+C to exit---")
-		var Saving_perMonth float64
-		var interestRate float64
-		var Actual_Standard_Of_Living_net float64
-		var Actual_Wealth float64
+		principal = Saving_perMonth
+		years_to_Retirement := float64(65 - Age)
+		//fmt.Println("-------------------NEW SCENARIO---------PROTECTING STANDARD OF LIVING!--------CTRL+C to exit---")
 		cutoff := false
-		fmt.Print("Savings target per month: ")
-		fmt.Scanln(&Saving_perMonth)
-		principal := Saving_perMonth
-		fmt.Print("Observed interest rate: ")
-		fmt.Scanln(&interestRate)
 		RDSP_rate := 3.5                       //this varies according to situations.
 		Tax_Bracket := 1 - 0.1495              //0.0879 //0.1495 //14.95% SECOND BRACKET 2024
 		Years_To_Death := Life_Expectancy - 65 //for a man in Canada
-		fmt.Print("Actual standard of Living (NET): ")
-		fmt.Scanln(&Actual_Standard_Of_Living_net)
 		Standard_of_Living_at_Retirement := Actual_Standard_Of_Living_net
 		RRQ_Disability_Max_Monthly := 1728.0 / 2               //50% the maximum
 		Canada_Pension_Plan_Disability_Max_2021 := 1046.66 / 2 //50% the maximum
@@ -45,9 +61,6 @@ func main() {
 
 		Cost_Of_living := Actual_Standard_Of_Living_net * ((years_to_Retirement + float64(Years_To_Death)) / 24) * 2 // Cost of living index doubles every 24 years
 		Insurer_Inflation := 0.02                                                                                    //2%
-
-		fmt.Print("Existing Actual Wealth: ")
-		fmt.Scanln(&Actual_Wealth)
 
 		var Raw_Capital float64
 		var RDSP_GOVT_MATCHED float64
@@ -76,36 +89,38 @@ func main() {
 		Retirement_Capital := Raw_Capital + principal
 		PreRetirement_Capital := Retirement_Capital
 
-		fmt.Printf("Savings by the age of 65: %.2f$\n", Retirement_Capital)
+		if Found {
+			fmt.Printf("Savings by the age of 65: %.2f$\n", Retirement_Capital)
+		}
 
 		for i := 1; i <= Years_To_Death; i++ {
 			Retirement_Capital = Retirement_Capital * (1 - (interestRate / 100))
 			Retirement_Capital = Retirement_Capital - (Standard_of_Living_at_Retirement * Tax_Bracket)
 			LivingCapital = (Standard_of_Living_at_Retirement * Tax_Bracket) + ((RRQ_Disability_Max_Monthly * 12 * Yearly_Inflation) * Tax_Bracket) + ((Canada_Pension_Plan_Disability_Max_2021 * 12 * Yearly_Inflation) * Tax_Bracket)
 			if Retirement_Capital < 0 {
-				//LivingCapital = Retirement_Capital
-				fmt.Printf("Standard of life at %d: %.2f$\n", 65+i, LivingCapital)
+				//fmt.Printf("Standard of life at %d: %.2f$\n", 65+i, LivingCapital)
 				Life_Expectancy = 65 + i
 				break
 			}
 			//RRQ_Disability_Max_Monthly = RRQ_Disability_Max_Monthly * Yearly_Inflation
 			//Canada_Pension_Plan_Disability_Max_2021 = Canada_Pension_Plan_Disability_Max_2021 * Yearly_Inflation
 		}
+		if Found {
+			fmt.Printf("Savings by the age of %d: %.2f$\n", Life_Expectancy+1, Retirement_Capital)
 
-		fmt.Printf("Savings by the age of %d: %.2f$\n", Life_Expectancy+1, Retirement_Capital)
+			fmt.Printf("Adjusted Cost of Living at %d: %.2f$\n", Life_Expectancy, Cost_Of_living)
 
-		fmt.Printf("Adjusted Cost of Living at %d: %.2f$\n", Life_Expectancy, Cost_Of_living)
+			fmt.Printf("Adjusted Reality at %d: %.2f percent actual standards of living\n", Life_Expectancy, ((LivingCapital / Cost_Of_living) * 100))
 
-		fmt.Printf("Adjusted Reality at %d: %.2f percent actual standards of living\n", Life_Expectancy, ((LivingCapital / Cost_Of_living) * 100))
+			fmt.Println("Cost of living index doubles every 24 years average on 3% inflation historically.")
 
-		fmt.Println("Cost of living index doubles every 24 years average on 3% inflation historically.")
+			fmt.Printf("Projections using %.1f inflation leads to %.2f percent difference in standard of living at %d\n", (1-Yearly_Inflation)*-100, 100-((LivingCapital/Cost_Of_living)*100), Life_Expectancy)
 
-		fmt.Printf("Projections using %.1f inflation leads to %.2f percent difference in standard of living at %d\n", (1-Yearly_Inflation)*-100, 100-((LivingCapital/Cost_Of_living)*100), Life_Expectancy)
-		fmt.Printf("This model suggest a saving of %.2f monthly\n", Saving_perMonth)
-
+			fmt.Printf("This model suggest a saving of %.2f monthly\n", Saving_perMonth)
+		}
 		years_to_double_cost_of_Living := math.Log(2.0) / math.Log(1+(interestRate/100))
 		//years_to_double_cost_of_Living = 72 / interestRate //tripple cost of living
-		fmt.Printf("-------------------------------------THIS PROJECTIONS AT %.2f percent INTEREST RATE-----------%.2f years to DOUBLE Cost of Living-------\n", interestRate, years_to_double_cost_of_Living)
+		//fmt.Printf("-------------------------------------THIS PROJECTIONS AT %.2f percent INTEREST RATE-----------%.2f years to DOUBLE Cost of Living-------\n", interestRate, years_to_double_cost_of_Living)
 
 		AdjustedRevenue := Actual_Standard_Of_Living_net
 		AdjustedCostOfLiving := Actual_Standard_Of_Living_net
@@ -116,13 +131,17 @@ func main() {
 			AdjustedRevenue = AdjustedRevenue + (Actual_Standard_Of_Living_net * Insurer_Inflation)
 			AdjustedCostOfLiving = AdjustedCostOfLiving + Actual_Standard_Of_Living_net/years_to_double_cost_of_Living
 			if (Saving_perMonth*12 < AdjustedCostOfLiving-AdjustedRevenue) && (cutoff == false) {
-				fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f$ SAVED MONTHLY  -->CUT-OFF<--\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
+				if Found {
+					fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f$ SAVED MONTHLY  -->CUT-OFF<--\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
+				}
 				DictRetirement[2024+i] = append(DictRetirement[2024+i], AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, 0, 0)
 				cutoff = true
 			} else {
 				if cutoff {
 					if i >= int(years_to_Retirement-7) && RDSP_SPENT < 100000 && Age+i < 65 {
-						fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**INJECTING %.2f$ FROM RDSP RETIREMENT CAPITAL\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12))
+						if Found {
+							fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**INJECTING %.2f$ FROM RDSP RETIREMENT CAPITAL\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12))
+						}
 						DictRetirement[2024+i] = append(DictRetirement[2024+i], AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, AdjustedCostOfLiving-AdjustedRevenue-(Saving_perMonth*12), 0)
 						RDSP_SPENT += (AdjustedCostOfLiving - AdjustedRevenue - (Saving_perMonth * 12))
 					} else {
@@ -133,27 +152,110 @@ func main() {
 							if PreRetirement_Capital < 0 {
 								break
 							}
-							fmt.Printf("|Year %d[%d]<---Elderly Pension ---> %.2f$<---Adjusted Cost of living--->%.2f$---|**INJECTING %.2f$ FROM RETIREMENT CAPITAL[%.2f left]\n", 2024+i, Age+i, ElderlyRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-ElderlyRevenue-(Saving_perMonth*12), PreRetirement_Capital)
+							if Found {
+								fmt.Printf("|Year %d[%d]<---Elderly Pension ---> %.2f$<---Adjusted Cost of living--->%.2f$---|**INJECTING %.2f$ FROM RETIREMENT CAPITAL[%.2f left]\n", 2024+i, Age+i, ElderlyRevenue, AdjustedCostOfLiving, AdjustedCostOfLiving-ElderlyRevenue-(Saving_perMonth*12), PreRetirement_Capital)
+							}
 							DictRetirement[2024+i] = append(DictRetirement[2024+i], ElderlyRevenue, AdjustedCostOfLiving, Saving_perMonth, 0, AdjustedCostOfLiving-ElderlyRevenue-(Saving_perMonth*12))
 						} else {
-							fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f percent PURCHASING POWER [insufficent funding]\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedRevenue/AdjustedCostOfLiving*100)
+							if Found {
+								fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f percent PURCHASING POWER [insufficent funding]\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, AdjustedRevenue/AdjustedCostOfLiving*100)
+							}
 							DictRetirement[2024+i] = append(DictRetirement[2024+i], AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, 0, 0)
 						}
 					}
 				} else {
-					fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f$ SAVED MONTHLY\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
+					if Found {
+						fmt.Printf("|Year %d[%d]<---Adjusted Revenue---> %.2f$<---Adjusted Cost of living--->%.2f$---|**%.2f$ SAVED MONTHLY\n", 2024+i, Age+i, AdjustedRevenue, AdjustedCostOfLiving, (AdjustedCostOfLiving/AdjustedRevenue)*Saving_perMonth)
+					}
 					DictRetirement[2024+i] = append(DictRetirement[2024+i], AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, 0, 0)
 				}
 			}
 		}
-		fmt.Println("------------------------------------------CLEARER-----------------------------------")
-		for i := 0; i < len(DictRetirement); i++ {
+		if Found {
+			fmt.Println("------------------------------------------CLEARER-----------------------------------")
+		}
+		var i int
+		var StartPurchasingPower float64 = 0.0
+		for i = 0; i < len(DictRetirement); i++ {
+			var NewPurchasingPower float64
 			Year := 2025 + i
 			RetirementData := DictRetirement[Year]
 			AdjustedRevenue, AdjustedCostOfLiving, Saving_perMonth, RDSP_Adjustment, Pension_Adjustments := RetirementData[0], RetirementData[1], RetirementData[2], RetirementData[3], RetirementData[4]
 			Cash := AdjustedRevenue - (Saving_perMonth * 12) + RDSP_Adjustment + Pension_Adjustments
-			fmt.Printf("|Year %d[%d]<---Cash---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f percent PURCHASING POWER\n", Year, Year-2024+Age, Cash, AdjustedCostOfLiving, Cash/AdjustedCostOfLiving*100)
+			NewPurchasingPower = Cash / AdjustedCostOfLiving * 100
+			if i == 0 {
+				StartPurchasingPower = NewPurchasingPower
+			}
+			if Found {
+				fmt.Printf("|Year %d[%d]<---Cash---> %.2f$<---Adjusted Cost of living--->%.2f$---|******%.2f percent PURCHASING POWER\n", Year, Year-2024+Age, Cash, AdjustedCostOfLiving, NewPurchasingPower)
+			}
+			if i > 0 && (StartPurchasingPower-NewPurchasingPower) > ThresholdPurchasingPower {
+				break
+			}
+		}
+		if Found {
+			fmt.Printf("This model suggest a saving of %.2f monthly for a interest rate of %.2f\n", Saving_perMonth, interestRate)
+			break
+		}
+		if i == len(DictRetirement) {
+			if StartPurchasingPower >= Reference_acceptable_Purchasing_Power && !Hunting { // some quality of life. 75% reference.
+				Found = true
+			} else {
+				if Actual_Standard_Of_Living_net > 0 {
+					Saving_perMonth = previousSaving_perMonth
+					Actual_Standard_Of_Living_net -= 1000 // at a lower standard of living.
+					//fmt.Println(Actual_Standard_Of_Living_net)
+				} else {
+					if StartPurchasingPower >= Reference_acceptable_Purchasing_Power {
+						Hunting = false
+						Found = true
+					} else {
+						if !Hunting && !Disabled {
+							Saving_perMonth = previousSaving_perMonth
+							Actual_Standard_Of_Living_net = previousStandardofLiving
+							Hunting = true
+							//fmt.Println("Hunting...")
+						} else {
+							Saving_perMonth = previousSaving_perMonth
+							Actual_Standard_Of_Living_net = previousStandardofLiving
+							Reference_acceptable_Purchasing_Power -= 1
+							//fmt.Println("Lowering...Purchasing Power to ", Reference_acceptable_Purchasing_Power)
+							if Reference_acceptable_Purchasing_Power == 0 {
+								interestRate -= 0.25
+								Saving_perMonth = previousSaving_perMonth
+								Actual_Standard_Of_Living_net = previousStandardofLiving
+								Reference_acceptable_Purchasing_Power = previousReferenceAcceptable_Purchasing_Power
+								if interestRate <= 0 {
+									fmt.Println("Combination error...Sorry!.")
+									os.Exit(1)
+								}
+							}
+						}
+
+					}
+
+				}
+			}
+
+		} else {
+			if Hunting {
+				Saving_perMonth -= 10
+				//fmt.Println(Saving_perMonth)
+				if Saving_perMonth <= 0 {
+					Reference_acceptable_Purchasing_Power -= 1
+					Saving_perMonth = previousSaving_perMonth
+					Actual_Standard_Of_Living_net = previousStandardofLiving
+					//fmt.Printf("Lowering purchasing power to %.1f\n", Reference_acceptable_Purchasing_Power)
+					if Reference_acceptable_Purchasing_Power == 0 {
+						Reference_acceptable_Purchasing_Power = previousReferenceAcceptable_Purchasing_Power
+						Hunting = false // it failed to find it at that interest...it's going back.
+						Disabled = true
+					}
+				}
+			} else {
+				Saving_perMonth += 10
+				//fmt.Println(Saving_perMonth)
+			}
 		}
 	}
-
 }
