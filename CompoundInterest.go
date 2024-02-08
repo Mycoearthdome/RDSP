@@ -118,7 +118,7 @@ func main() {
 				//LivingCapital = (Standard_of_Living_at_Retirement * Tax_Bracket) + ((RRQ_Disability_Max_Monthly * 12 * Yearly_Inflation) * Tax_Bracket) + ((Canada_Pension_Plan_Disability_Max_2021 * 12 * Yearly_Inflation) * Tax_Bracket)
 				if Retirement_Capital < 0 {
 					//fmt.Printf("Standard of life at %d: %.2f$\n", 65+i, LivingCapital)
-					Life_Expectancy = 65 + i
+					//Life_Expectancy = 65 + i
 					break
 				}
 				//RRQ_Disability_Max_Monthly = RRQ_Disability_Max_Monthly * Yearly_Inflation
