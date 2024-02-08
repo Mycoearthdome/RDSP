@@ -50,6 +50,8 @@ func main() {
 	PREpreviousStandardofLiving := Actual_Standard_Of_Living_net
 	for j := Age; j <= Life_Expectancy; j++ {
 		SaveStartPurchasingPower := 0.0
+		SaveRetirementMoneys := 0.0
+		SaveAge := 0
 		previousSaving_perMonth = PREpreviousSaving_perMonth
 		Saving_perMonth = previousSaving_perMonth
 		Reference_acceptable_Purchasing_Power := PREReference_acceptable_Purchasing_Power
@@ -169,6 +171,7 @@ func main() {
 								ElderlyRevenue := ((RRQ_Disability_Max_Monthly * 12 * Tax_Bracket) * Insurer_Inflation) + ((Canada_Pension_Plan_Disability_Max_2021 * 12 * Tax_Bracket) * Insurer_Inflation)
 								PreRetirement_Capital = PreRetirement_Capital - (AdjustedCostOfLiving - ElderlyRevenue - (Saving_perMonth * 12))
 								if PreRetirement_Capital < 0 {
+									PreRetirement_Capital = 0
 									break
 								}
 								if Found {
@@ -214,6 +217,7 @@ func main() {
 			}
 			if Found {
 				//fmt.Printf("This model suggest a saving of %.2f monthly for a interest rate of %.2f\n", Saving_perMonth, interestRate)
+				SaveAge = len(DictRetirement)
 				break
 			}
 			if i == len(DictRetirement) {
@@ -280,9 +284,10 @@ func main() {
 				}
 			}
 			SaveStartPurchasingPower = StartPurchasingPower
+			SaveRetirementMoneys = PreRetirement_Capital
 		}
 		if !Inconclusive {
-			fmt.Printf("Age:%d<-Monthly retirement savings->%.2f<-at interest rate: %.2f--->Start Purchasing Power of %.2f percent \n", j, Saving_perMonth, interestRate, SaveStartPurchasingPower)
+			fmt.Printf("Age:%d<-Monthly retirement savings->%.2f<-at interest rate: %.2f--->Start Purchasing Power of %.2f percent. --> Legacy money left:%.2f [DOOMSDAY:%d]\n", j, Saving_perMonth, interestRate, SaveStartPurchasingPower, SaveRetirementMoneys, j+SaveAge)
 		} else {
 			Inconclusive = false
 		}
